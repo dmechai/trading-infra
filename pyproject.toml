@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trading-infra"
+version = "0.1.0"
+description = "Read-only public exchange and market-data infrastructure"
+requires-python = ">=3.10"
+
+[project.urls]
+Repository = "https://github.com/dmechai/trading-infra"
+Issues = "https://github.com/dmechai/trading-infra/issues"
+
+[project.optional-dependencies]
+async = ["aiohttp>=3.9", "ccxt>=4"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
