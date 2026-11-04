@@ -20,3 +20,13 @@ class PublicJSONClient:
         })
         with urlopen(request, timeout=self.timeout) as response:
             return json.load(response)
+
+    def post_json(self, path: str, payload):
+        """Read-only JSON POST. Some public market APIs expose reads this way."""
+        body = json.dumps(payload).encode()
+        request = Request(url=self.api_url + path, data=body, headers={
+            "Accept": "application/json", "Content-Type": "application/json",
+            "User-Agent": "TradingInfra/0.1",
+        }, method="POST")
+        with urlopen(request, timeout=self.timeout) as response:
+            return json.load(response)

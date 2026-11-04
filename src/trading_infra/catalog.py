@@ -6,11 +6,15 @@ from .adapters.risex import RiseXPublicClient
 from .adapters.lighter import LighterPublicClient
 from .adapters.variational import VariationalPublicClient
 from .adapters.okx import OKXPublicClient
+from .adapters.hyperliquid_public import HyperliquidPublicClient
+from .adapters.binance_perp import BinancePerpPublicClient
+from .adapters.bitget_perp import BitgetPerpPublicClient
 
 
 PUBLIC_CLIENTS = {'risex': RiseXPublicClient, 'arcus': ArcusPublicClient,
                   'lighter': LighterPublicClient, 'variational': VariationalPublicClient,
-                  'okx': OKXPublicClient}
+                  'okx': OKXPublicClient, 'hyperliquid': HyperliquidPublicClient,
+                  'binance': BinancePerpPublicClient, 'bitget': BitgetPerpPublicClient}
 
 
 def public_client(venue, network, **kwargs):
