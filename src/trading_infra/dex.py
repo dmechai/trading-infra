@@ -88,10 +88,14 @@ async def _lighter_markets() -> dict[str, dict[str, Any]]:
 async def _lighter_funding() -> dict[str, float]:
     async def load():
         data = await _get_json(f"{LIGHTER_API}/funding-rates")
+        if data.get('code') != 200:
+            raise ValueError(f'Lighter funding code={data.get("code")}')
         result = {}
         for row in data.get("funding_rates") or []:
             if str(row.get("exchange") or "").lower() == "lighter":
-                result[str(row.get("symbol") or "").upper()] = float(row.get("rate") or 0.0)
+                rate = row.get('rate')
+                if rate is not None:
+                    result[str(row.get("symbol") or "").upper()] = float(rate) / 8
         return result
     return await _cached("lighter:funding", _CACHE_TTL, load)
 
@@ -148,14 +152,51 @@ async def lighter_quote(symbol: str) -> dict[str, Any] | None:
     return {
         "exchange": "lighter", "base": base, "symbol": f"{base}/USDC:USDC",
         "bid": bid, "ask": ask, "mark": (bid + ask) / 2.0,
-        "funding_rate": float(funding.get(base, 0.0)), "interval_hours": 1.0,
+        "funding_rate": funding.get(base), "interval_hours": 1.0,
         "quote_volume": float(market.get("open_interest_usd") or 0.0),
         "bid_notional": bid * bid_qty, "ask_notional": ask * ask_qty,
         "open_interest": float(market.get("open_interest") or 0.0), "source": "lighter-public",
     }
 
 
+async def _catalog_quote(venue: str, symbol: str) -> dict[str, Any] | None:
+    from .catalog import public_client
+
+    async def load():
+        rows = await asyncio.to_thread(public_client(venue, 'mainnet').list_markets)
+        received = time.time()
+        return {row['market']: dict(row, received_at=received) for row in rows}
+
+    markets = await _cached(venue+':catalog', _CACHE_TTL, load)
+    base = _base(symbol)
+    row = markets.get(base+'-USD')
+    if not row or row.get('bid') is None or row.get('ask') is None or row['bid'] >= row['ask']:
+        return None
+    def value(key):
+        return float(row[key]) if row.get(key) is not None else None
+    bid, ask = value('bid'), value('ask')
+    return dict(exchange=venue, base=base, symbol=row['symbol'], network='mainnet',
+        bid=bid, ask=ask, mark=value('mark_price'), funding_rate=value('funding_rate'),
+        interval_hours=value('funding_interval_hours'), taker_fee_rate=value('taker_fee_rate'),
+        bid_notional=bid*float(row['bid_size']) if row.get('bid_size') is not None else None,
+        ask_notional=ask*float(row['ask_size']) if row.get('ask_size') is not None else None,
+        quote_currency=row['quote_currency'], settle_currency=row['settle_currency'],
+        contract_size=value('contract_size'), source_timestamp=row.get('source_timestamp'),
+        received_at=row['received_at'], quote_kind=row.get('quote_kind'),
+        executable=row.get('executable', True), source=venue+'-public')
+
+
+async def okx_quote(symbol: str) -> dict[str, Any] | None:
+    return await _catalog_quote('okx', symbol)
+
+
+async def variational_quote(symbol: str) -> dict[str, Any] | None:
+    return await _catalog_quote('variational', symbol)
+
+
 QUOTE_ADAPTERS = {
+    'okx': okx_quote,
+    'variational': variational_quote,
     "hyperliquid": hyperliquid_quote,
     "lighter": lighter_quote,
 }

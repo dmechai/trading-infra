@@ -30,6 +30,11 @@ VENUES = MappingProxyType({
     "lighter": _venue("lighter", {
         "mainnet": "https://mainnet.zklighter.elliot.ai/api/v1",
     }, "markets", "book", "funding"),
+    "variational": _venue("variational", {
+        "mainnet": "https://omni-client-api.prod.ap-northeast-1.variational.io",
+    }, "markets", "funding", "indicative_rfq"),
+    "okx": _venue("okx", {"mainnet": "https://www.okx.com"},
+                  "markets", "book", "funding"),
     "risex": _venue("risex", {
         "mainnet": "https://api.rise.trade",
         "testnet": "https://api.testnet.rise.trade",

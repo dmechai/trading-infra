@@ -44,6 +44,9 @@ class RiseXPublicClient(PublicJSONClient):
         leverage = Decimal(config["max_leverage"])
         if min(tick, step, minimum, leverage) <= 0:
             raise ValueError("RiseX market filters must be positive")
+        factor = Decimal(str(config['maintenance_margin_factor'])) if config.get('maintenance_margin_factor') is not None else None
+        if factor is not None and (not factor.is_finite() or factor <= 1):
+            raise ValueError("RiseX maintenance margin factor must be finite and greater than one")
         funding_rate = row.get("current_funding_rate")
         funding_interval = row.get("funding_interval")
         mark_price = row.get("mark_price") or row.get("last_price")
@@ -56,6 +59,11 @@ class RiseXPublicClient(PublicJSONClient):
             "size_step": float(step),
             "min_order_size": float(minimum),
             "max_leverage": float(leverage),
+            "initial_margin": Decimal(1) / leverage,
+            # Official RiseX UI: maintenance = abs(size) * mark / factor.
+            "maintenance_margin_factor": factor,
+            "maintenance_margin": Decimal(1) / factor if factor is not None else None,
+            "risk_source": "risex_market_config",
             "reduce_only": bool(row.get("reduce_only")),
             "unlocked": bool(config.get("unlocked")),
             "funding_rate": Decimal(str(funding_rate)) if funding_rate is not None else None,

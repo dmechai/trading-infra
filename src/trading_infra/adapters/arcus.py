@@ -33,12 +33,25 @@ class ArcusPublicClient(PublicJSONClient):
         minimum = Decimal(row["minOrderSize"])
         if min(tick, step, minimum) <= 0 or not row.get("marketDisplayName"):
             raise ValueError("Arcus market filters are invalid")
+        margins = {}
+        for key, raw in (("initial_margin", row.get("initialMarginFraction")),
+                         ("maintenance_margin", row.get("maintenanceMarginFraction")),
+                         ("off_hours_initial_margin", row.get("offHoursInitialMarginFraction"))):
+            value = Decimal(str(raw)) if raw is not None else None
+            if value is not None and (not value.is_finite() or not 0 < value <= 1):
+                raise ValueError("Arcus margin fractions must be finite and in (0, 1]")
+            margins[key] = value
+        if margins['maintenance_margin'] == 1:
+            raise ValueError("Arcus maintenance margin must be below one")
         funding_rate = row.get("nextFundingRate")
         if funding_rate is None:
             funding_rate = row.get("fundingRate")
         return {
             "market": row["marketDisplayName"],
             "market_id": int(row["marketId"]),
+            **margins,
+            "max_leverage": Decimal(1) / margins['initial_margin'] if margins['initial_margin'] is not None else None,
+            "risk_source": "arcus_market_fractions",
             "tick_size": tick,
             "size_step": step,
             "min_order_size": minimum,
