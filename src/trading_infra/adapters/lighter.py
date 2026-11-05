@@ -45,7 +45,11 @@ class LighterPublicClient(PublicJSONClient):
             funding_interval_hours=Decimal(1), funding_source='8h_comparison_divided_by_8',
             mark_price=number(row.get('mark_price'), positive=True),
             index_price=number(row.get('index_price'), positive=True),
-            taker_fee_rate=number(row.get('taker_fee')), initial_margin=imr, maintenance_margin=mmr,
+            # Lighter genuinely charges zero on many markets, so a 0 rate is real.
+            # The flag is only honoured when it explicitly disables the rate.
+            taker_fee_rate=None if row.get('is_taker_fee_enabled') is False else number(row.get('taker_fee')),
+            maker_fee_rate=None if row.get('is_maker_fee_enabled') is False else number(row.get('maker_fee')),
+            initial_margin=imr, maintenance_margin=mmr,
             max_leverage=1/imr if imr else None, risk_source='lighter_orderBookDetails_bps',
             min_order_size=number(row.get('min_base_amount'), positive=True),
             min_notional=number(row.get('min_quote_amount'), positive=True),

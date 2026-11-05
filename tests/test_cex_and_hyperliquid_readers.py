@@ -123,3 +123,66 @@ class BitgetPerpTests(unittest.TestCase):
         # A list endpoint must still reject a non-list payload rather than guess.
         with self.assertRaises(ValueError):
             c._rows('/api/v2/mix/market/contracts')
+
+
+class MakerFeeTests(unittest.TestCase):
+    """Maker rates are read where a venue publishes them, and never invented."""
+
+    def test_bitget_reads_both_published_rates(self):
+        c = BitgetPerpPublicClient('mainnet')
+        c.get_json = Mock(side_effect=lambda path, **kw: {'code': '00000', 'data': {
+            '/api/v2/mix/market/contracts': [{
+                'symbol': 'BTCUSDT', 'baseCoin': 'BTC', 'quoteCoin': 'USDT', 'symbolStatus': 'normal',
+                'volumePlace': '4', 'pricePlace': '1', 'minTradeNum': '0.0001',
+                'makerFeeRate': '0.0002', 'takerFeeRate': '0.0006'}],
+            '/api/v2/mix/market/tickers': [{'symbol': 'BTCUSDT', 'bidPr': '1', 'askPr': '2'}],
+        }[path]})
+        row = c.list_markets()[0]
+        self.assertEqual(row['maker_fee_rate'], D('0.0002'))
+        self.assertEqual(row['taker_fee_rate'], D('0.0006'))
+
+    def test_lighter_keeps_a_real_zero_but_honours_an_explicit_disable(self):
+        from trading_infra.adapters.lighter import LighterPublicClient
+        base = dict(symbol='BTC', market_id=1, market_type='perp', status='active',
+                    supported_price_decimals=1, supported_size_decimals=6,
+                    min_initial_margin_fraction=200, maintenance_margin_fraction=120,
+                    mark_price='70000')
+
+        def client(extra):
+            c = LighterPublicClient('mainnet')
+            c.get_json = Mock(side_effect=lambda path, **kw: {'code': 200, **(
+                {'order_book_details': [dict(base, **extra)]} if path == '/orderBookDetails'
+                else {'funding_rates': [dict(market_id=1, exchange='lighter', rate='.0001')]})})
+            return c
+
+        # Zero is Lighter's real rate on many markets, not a missing value.
+        row = client({'taker_fee': '0.0000', 'maker_fee': '0.0000',
+                      'is_taker_fee_enabled': True, 'is_maker_fee_enabled': True}).list_markets()[0]
+        self.assertEqual((row['taker_fee_rate'], row['maker_fee_rate']), (D(0), D(0)))
+        # Without the flags at all, the published rate still counts.
+        row = client({'taker_fee': '0.0003'}).list_markets()[0]
+        self.assertEqual(row['taker_fee_rate'], D('0.0003'))
+        # An explicit disable makes the rate unknown rather than zero.
+        row = client({'taker_fee': '0.0003', 'is_taker_fee_enabled': False}).list_markets()[0]
+        self.assertIsNone(row['taker_fee_rate'])
+
+    def test_hyperliquid_reads_the_public_schedule_and_degrades_to_unknown(self):
+        c = HyperliquidPublicClient('mainnet')
+        c.post_json = Mock(side_effect=lambda path, payload: (
+            {'userCrossRate': '0.00045', 'userAddRate': '0.00015'}
+            if payload['type'] == 'userFees' else
+            [{'universe': [{'name': 'BTC', 'szDecimals': 5}]},
+             [{'funding': '0', 'markPx': '1', 'impactPxs': ['1', '2']}]]))
+        row = c.list_markets()[0]
+        self.assertEqual((row['taker_fee_rate'], row['maker_fee_rate']), (D('0.00045'), D('0.00015')))
+
+        def broken(path, payload):
+            if payload['type'] == 'userFees':
+                raise RuntimeError('schedule unavailable')
+            return [{'universe': [{'name': 'BTC', 'szDecimals': 5}]},
+                    [{'funding': '0', 'markPx': '1', 'impactPxs': ['1', '2']}]]
+
+        c.post_json = Mock(side_effect=broken)
+        row = c.list_markets()[0]
+        self.assertIsNone(row['taker_fee_rate'])
+        self.assertIsNone(row['maker_fee_rate'])
