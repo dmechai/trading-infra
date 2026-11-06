@@ -186,6 +186,10 @@ CONSUMERS = (
          used_by='arb 期现套利', purpose='Binance 现货+永续', required=False),
     dict(key='bitget:funding', venue='bitget', label='funding', auth='hmac_passphrase',
          used_by='arb 期现套利', purpose='Bitget 现货+永续', required=True),
+    dict(key='hyperliquid:acceptance', venue='hyperliquid', label='acceptance',
+         auth='evm_key_address', used_by='Grid 测试网', purpose='测试网下单链路验证', required=False),
+    dict(key='risex_testnet:acceptance', venue='risex_testnet', label='acceptance',
+         auth='evm_key_address', used_by='Grid 测试网', purpose='RiseX 测试网验收', required=False),
 )
 
 
@@ -213,13 +217,19 @@ def inventory(path=None):
         rows.append(dict(spec, configured=bool(entry), ready=ready, error=problem,
                          enabled=bool((entry or {}).get('enabled', True))))
     known = {spec['key'] for spec in CONSUMERS}
+    archived = []
     for key in sorted(set(accounts) - known):
         venue, _, label = key.partition(':')
-        rows.append(dict(key=key, venue=venue, label=label or 'default',
-                         auth=(accounts[key] or {}).get('auth'), used_by='—', purpose='其他账户',
-                         required=False, configured=True, ready=True, error=None,
-                         enabled=bool(accounts[key].get('enabled', True))))
-    return dict(store=str(store_path(path)), error=store_error, accounts=rows)
+        entry = accounts[key] or {}
+        archived.append(dict(key=key, venue=venue, label=label or 'default',
+                             auth=entry.get('auth'), used_by='无', required=False,
+                             purpose=entry.get('note') or '已归档，无代码引用',
+                             configured=True, ready=True, error=None,
+                             enabled=bool(entry.get('enabled', True))))
+    # Archived keys are kept so a migration loses nothing, but they are not
+    # part of any consumer and must not look like something to configure.
+    return dict(store=str(store_path(path)), error=store_error,
+                accounts=rows, archived=archived)
 
 
 def app_secret(name, *, path=None):
