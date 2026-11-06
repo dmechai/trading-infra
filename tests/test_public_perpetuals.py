@@ -92,6 +92,16 @@ class PublicPerpetualTests(unittest.TestCase):
                 public_client(venue, 'testnet')
 
 
+from importlib.util import find_spec
+
+# `dex` and the async readers live behind the `async` extra (aiohttp, ccxt).
+# Without it these cannot run at all, so say so instead of reporting a failure.
+ASYNC_EXTRA = find_spec("aiohttp") is not None and find_spec("ccxt") is not None
+REQUIRES_ASYNC_EXTRA = unittest.skipUnless(
+    ASYNC_EXTRA, "install trading-infra[async] (aiohttp, ccxt) to run the async readers")
+
+
+@REQUIRES_ASYNC_EXTRA
 class AsyncPublicPerpetualTests(unittest.IsolatedAsyncioTestCase):
     async def test_existing_async_lighter_reader_uses_hourly_rate_and_preserves_missing(self):
         from unittest.mock import patch, AsyncMock

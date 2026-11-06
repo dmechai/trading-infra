@@ -78,6 +78,16 @@ class InfrastructureTests(unittest.TestCase):
         self.assertEqual(quote.as_dict()["received_at"], 100)
 
 
+from importlib.util import find_spec
+
+# `dex` and the async readers live behind the `async` extra (aiohttp, ccxt).
+# Without it these cannot run at all, so say so instead of reporting a failure.
+ASYNC_EXTRA = find_spec("aiohttp") is not None and find_spec("ccxt") is not None
+REQUIRES_ASYNC_EXTRA = unittest.skipUnless(
+    ASYNC_EXTRA, "install trading-infra[async] (aiohttp, ccxt) to run the async readers")
+
+
+@REQUIRES_ASYNC_EXTRA
 class AsyncInfrastructureTests(unittest.IsolatedAsyncioTestCase):
     async def test_cex_connections_are_reused_and_released(self):
         client = SimpleNamespace(
