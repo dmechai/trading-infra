@@ -91,3 +91,60 @@ class CredentialStoreTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class CredentialWriteTests(unittest.TestCase):
+    """Writes must stay atomic and keep the store readable by its group."""
+
+    def setUp(self):
+        self.tmp = TemporaryDirectory()
+        self.path = Path(self.tmp.name) / 'credentials.json'
+        self.path.write_text(json.dumps({'version': 1, 'accounts': {}}))
+        os.chmod(self.path, 0o640)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_save_then_load_round_trips(self):
+        credentials.save_account('hyperliquid', 'arb', {
+            'auth': 'evm_key_address', 'private_key': 'k', 'account_address': '0x1'}, path=self.path)
+        loaded = load_account('hyperliquid', 'arb', path=self.path)
+        self.assertEqual((loaded['private_key'], loaded['account_address']), ('k', '0x1'))
+
+    def test_save_never_returns_a_secret(self):
+        result = credentials.save_account('bitget', 'funding', {
+            'auth': 'hmac_passphrase', 'api_key': 'KEY1', 'secret': 'SEC1',
+            'passphrase': 'PASS1'}, path=self.path)
+        rendered = json.dumps(result)
+        for value in ('KEY1', 'SEC1', 'PASS1'):
+            self.assertNotIn(value, rendered)
+
+    def test_a_blank_secret_keeps_the_stored_one(self):
+        credentials.save_account('hyperliquid', 'arb', {
+            'auth': 'evm_key_address', 'private_key': 'original', 'account_address': '0x1'}, path=self.path)
+        credentials.save_account('hyperliquid', 'arb', {
+            'auth': 'evm_key_address', 'private_key': '', 'account_address': '0x2'}, path=self.path)
+        loaded = load_account('hyperliquid', 'arb', path=self.path)
+        self.assertEqual(loaded['private_key'], 'original')
+        self.assertEqual(loaded['account_address'], '0x2')
+
+    def test_an_incomplete_save_is_refused_and_changes_nothing(self):
+        before = self.path.read_text()
+        with self.assertRaises(CredentialError):
+            credentials.save_account('bitget', 'funding', {
+                'auth': 'hmac_passphrase', 'api_key': 'k', 'secret': 's'}, path=self.path)
+        self.assertEqual(self.path.read_text(), before)
+
+    def test_the_file_mode_survives_a_write(self):
+        credentials.save_account('hyperliquid', 'arb', {
+            'auth': 'evm_key_address', 'private_key': 'k', 'account_address': '0x1'}, path=self.path)
+        self.assertEqual(os.stat(self.path).st_mode & 0o777, 0o640)
+
+    def test_delete_removes_only_the_named_account(self):
+        for label in ('arb', 'acceptance'):
+            credentials.save_account('hyperliquid', label, {
+                'auth': 'evm_key_address', 'private_key': 'k', 'account_address': '0x1'}, path=self.path)
+        credentials.delete_account('hyperliquid', 'arb', path=self.path)
+        self.assertEqual(list_accounts(self.path), ['hyperliquid:acceptance'])
+        with self.assertRaises(CredentialError):
+            credentials.delete_account('hyperliquid', 'arb', path=self.path)

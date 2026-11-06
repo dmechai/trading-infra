@@ -123,8 +123,15 @@ def _write_document(target, document):
             stream.flush()
             os.fsync(stream.fileno())
         os.chmod(temporary, mode)
-        if gid != -1:
-            os.chown(temporary, info.st_uid, gid)
+        if gid != -1 and os.stat(temporary).st_gid != gid:
+            # A writer with CAP_CHOWN dropped cannot change the group, so rely
+            # on the directory being setgid and only refuse if that failed too.
+            try:
+                os.chown(temporary, -1, gid)
+            except PermissionError:
+                raise CredentialError(
+                    'Cannot preserve the store group; make its directory setgid '
+                    f'(chmod g+s) or grant CAP_CHOWN: {target.parent}') from None
         os.replace(temporary, target)
     except BaseException:
         Path(temporary).unlink(missing_ok=True)
