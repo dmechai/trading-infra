@@ -190,13 +190,8 @@ async def okx_quote(symbol: str) -> dict[str, Any] | None:
     return await _catalog_quote('okx', symbol)
 
 
-async def variational_quote(symbol: str) -> dict[str, Any] | None:
-    return await _catalog_quote('variational', symbol)
-
-
 QUOTE_ADAPTERS = {
     'okx': okx_quote,
-    'variational': variational_quote,
     "hyperliquid": hyperliquid_quote,
     "lighter": lighter_quote,
 }

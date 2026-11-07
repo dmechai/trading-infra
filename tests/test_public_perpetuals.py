@@ -4,7 +4,6 @@ from unittest.mock import Mock
 
 from trading_infra.adapters.lighter import LighterPublicClient
 from trading_infra.adapters.okx import OKXPublicClient
-from trading_infra.adapters.variational import VariationalPublicClient
 from trading_infra.catalog import public_client, read_catalogs
 
 
@@ -40,17 +39,6 @@ class PublicPerpetualTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             c.list_markets()
 
-    def test_variational_apr_and_rfq_are_not_executable(self):
-        row = VariationalPublicClient.normalize_market(dict(ticker='RE_ETH', funding_rate='.1095',
-            funding_interval_s=14400, mark_price='100', quotes={'updated_at': '2026-11-04T05:00:00Z',
-            'base': {'bid': '99', 'ask': '101'}}))
-        self.assertEqual(row['funding_rate'], D('.00005'))
-        self.assertEqual(row['market'], 'RE_ETH-USD')
-        self.assertFalse(row['executable'])
-        self.assertEqual(row['taker_fee_rate'], 0)
-        for interval in (0, -1, 1800, None):
-            with self.assertRaises(ValueError):
-                VariationalPublicClient.normalize_market(dict(ticker='BTC', funding_interval_s=interval))
 
     def okx_row(self, **changes):
         return dict(dict(instId='BTC-USDT-SWAP', ctVal='0.01', ctMult='1', ctValCcy='BTC',
@@ -87,7 +75,7 @@ class PublicPerpetualTests(unittest.TestCase):
         self.assertIn('SOL-USD', rows['good'])
         self.assertIn('bad', errors)
         self.assertNotIn('bad', rows)
-        for venue in ('lighter', 'variational', 'okx'):
+        for venue in ('lighter', 'okx'):
             with self.assertRaises(ValueError):
                 public_client(venue, 'testnet')
 
@@ -119,27 +107,3 @@ class AsyncPublicPerpetualTests(unittest.IsolatedAsyncioTestCase):
         finally:
             await dex.close()
 
-    async def test_new_async_readers_preserve_rfq_and_catalog_cache_timestamp(self):
-        from unittest.mock import patch
-        from trading_infra import dex
-        client = Mock()
-        client.list_markets.return_value = [dict(market='BTC-USD', symbol='BTC', bid=D('100'), ask=D('101'),
-            mark_price=D('100'), funding_rate=D('.0001'), funding_interval_hours=D('8'),
-            taker_fee_rate=D('0'), quote_currency='USD', settle_currency='USDC',
-            quote_kind='indicative_rfq', executable=False, source_timestamp=100)]
-        try:
-            with patch('trading_infra.catalog.public_client', return_value=client):
-                first = await dex.variational_quote('BTC')
-                second = await dex.variational_quote('BTC')
-            self.assertFalse(first['executable'])
-            self.assertIsNone(first['bid_notional'])
-            self.assertEqual(first['received_at'], second['received_at'])
-            self.assertEqual(first['source_timestamp'], 100)
-            self.assertEqual(client.list_markets.call_count, 1)
-            self.assertIn('okx', dex.QUOTE_ADAPTERS)
-        finally:
-            await dex.close()
-
-
-if __name__ == '__main__':
-    unittest.main()

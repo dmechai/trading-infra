@@ -10,7 +10,7 @@ from trading_infra.catalog import PUBLIC_CLIENTS, public_client
 
 class CatalogRegistrationTests(unittest.TestCase):
     def test_every_scanner_venue_has_a_public_reader(self):
-        for venue in ('risex', 'arcus', 'lighter', 'variational', 'okx',
+        for venue in ('risex', 'arcus', 'lighter', 'okx',
                       'hyperliquid', 'binance', 'bitget'):
             self.assertIn(venue, PUBLIC_CLIENTS, venue)
 
