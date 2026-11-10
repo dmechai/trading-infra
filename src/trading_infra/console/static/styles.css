@@ -1,4 +1,6 @@
-/* Same token set as the Grid console so the two read as one system. */
+/* Same tokens as the Grid console so the two read as one system, on a more
+   generous vertical rhythm: this page is a form people read carefully once,
+   not a dashboard scanned at a glance, so rows and fields get room. */
 :root {
   color-scheme: dark;
   --bg: #061222;
@@ -12,96 +14,122 @@
   --muted: #a0b0c9;
   --subtle: #91a5c2;
   --blue: #54b1ff;
-  --selected: #133f85;
   --green: #07d69b;
   --red: #ff8593;
   --amber: #f8c664;
   --on-action: #021e20;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", "Microsoft YaHei", sans-serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  --fs-xs: .6875rem;
-  --fs-sm: .75rem;
-  --fs-body: .8125rem;
-  --fs-lg: 1rem;
-  --fs-title: 1.375rem;
+  --fs-xs: .75rem;
+  --fs-sm: .8125rem;
+  --fs-body: .875rem;
+  --fs-lg: 1.0625rem;
+  --fs-title: 1.5rem;
   --s1: .25rem;
-  --s2: .375rem;
+  --s2: .5rem;
   --s3: .75rem;
-  --s4: .875rem;
-  --s5: 1.125rem;
-  --s6: 1.5rem;
-  --radius: 10px;
-  --radius-sm: 6px;
+  --s4: 1rem;
+  --s5: 1.25rem;
+  --s6: 1.75rem;
+  --s7: 2.25rem;
+  --radius: 12px;
+  --radius-sm: 8px;
   --pill: 999px;
+  --row-leading: 1.7;
 }
 
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text);
-       font: var(--fs-body)/1.65 var(--font); letter-spacing: .02em;
+       font: var(--fs-body)/var(--row-leading) var(--font); letter-spacing: .01em;
        -webkit-font-smoothing: antialiased; }
 h1, h2, h3, p { margin: 0; }
 a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
 button, input, select { font: inherit; }
 button { cursor: pointer; }
 button:disabled { opacity: .45; cursor: not-allowed; }
-:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
 code, .mono { font-family: var(--mono); font-size: var(--fs-sm); }
 
 /* --- login ---------------------------------------------------------- */
 .login-shell { min-height: 100vh; display: grid; place-items: center; padding: var(--s6); }
-.login-card { width: min(26rem, 100%); background: var(--surface);
+.login-card { width: min(27rem, 100%); background: var(--surface);
               border: 1px solid var(--line); border-radius: var(--radius);
-              padding: var(--s6); display: grid; gap: var(--s4); }
-.login-card h1 { font-size: var(--fs-title); letter-spacing: -.02em; }
-.login-card p { color: var(--muted); font-size: var(--fs-sm); }
-.login-card label, .field { display: grid; gap: var(--s1); font-size: var(--fs-sm);
+              padding: var(--s7); display: grid; gap: var(--s5); }
+.login-card h1 { font-size: var(--fs-title); letter-spacing: -.02em; line-height: 1.3; }
+.login-card p { color: var(--muted); font-size: var(--fs-sm); line-height: 1.75; }
+.login-card form { display: grid; gap: var(--s5); }
+.login-card label, .field { display: grid; gap: var(--s2); font-size: var(--fs-sm);
                             color: var(--muted); }
 .login-card input, .field input {
   background: var(--input); border: 1px solid var(--line); border-radius: var(--radius-sm);
-  color: var(--text); padding: var(--s3); }
+  color: var(--text); padding: var(--s3) var(--s4); line-height: 1.5; }
 .login-card input:focus, .field input:focus { border-color: var(--line-strong); }
 .primary { background: var(--blue); color: var(--on-action); border: 0;
-           border-radius: var(--radius-sm); padding: var(--s3) var(--s5); font-weight: 600; }
+           border-radius: var(--radius-sm); padding: var(--s3) var(--s6);
+           font-weight: 600; line-height: 1.5; }
 .ghost { background: transparent; color: var(--muted); border: 1px solid var(--line);
-         border-radius: var(--radius-sm); padding: var(--s2) var(--s3); font-size: var(--fs-sm); }
-.ghost:hover { color: var(--text); border-color: var(--line-strong); }
-[role="alert"] { color: var(--red); font-size: var(--fs-sm); min-height: 1.2em; }
+         border-radius: var(--radius-sm); padding: var(--s2) var(--s4);
+         font-size: var(--fs-sm); line-height: 1.5; }
+.ghost:hover { color: var(--text); border-color: var(--line-strong); text-decoration: none; }
+[role="alert"] { color: var(--red); font-size: var(--fs-sm); min-height: 1.4em;
+                 line-height: 1.6; }
 
 /* --- shell ---------------------------------------------------------- */
-.topbar { display: flex; align-items: center; gap: var(--s4); padding: var(--s4) var(--s6);
-          border-bottom: 1px solid var(--line); background: var(--chrome); }
+.topbar { display: flex; align-items: center; gap: var(--s5); flex-wrap: wrap;
+          padding: var(--s5) var(--s7); border-bottom: 1px solid var(--line);
+          background: var(--chrome); }
 .brand { font-size: var(--fs-lg); letter-spacing: -.02em; }
-.brand span { color: var(--muted); font-size: var(--fs-sm); margin-left: var(--s2); }
+.brand span { color: var(--muted); font-size: var(--fs-sm); margin-left: var(--s3); }
 .topbar-right { margin-left: auto; display: flex; align-items: center; gap: var(--s3);
                 color: var(--muted); font-size: var(--fs-sm); }
-main { padding: var(--s6); display: grid; gap: var(--s6);
-       max-width: 72rem; margin: 0 auto; }
+main { padding: var(--s7); display: grid; gap: var(--s7);
+       max-width: 76rem; margin: 0 auto; }
 .panel { background: var(--surface); border: 1px solid var(--line);
-         border-radius: var(--radius); padding: var(--s5); display: grid; gap: var(--s4); }
-.panel-head { display: flex; align-items: center; gap: var(--s3); }
+         border-radius: var(--radius); padding: var(--s6);
+         display: grid; gap: var(--s5); }
+.panel-head { display: flex; align-items: center; gap: var(--s4); flex-wrap: wrap;
+              padding-bottom: var(--s2); }
 .panel-head h2 { font-size: var(--fs-lg); letter-spacing: -.01em; }
 .panel-head .spacer { margin-left: auto; }
-.subtle { color: var(--subtle); font-size: var(--fs-sm); }
-.negative { color: var(--red); font-size: var(--fs-sm); }
-.positive { color: var(--green); font-size: var(--fs-sm); }
+.subtle { color: var(--subtle); font-size: var(--fs-sm); line-height: 1.75; }
+.negative { color: var(--red); font-size: var(--fs-sm); line-height: 1.75; }
+.positive { color: var(--green); font-size: var(--fs-sm); line-height: 1.75; }
 
+/* Data rows are the thing that felt cramped: six columns on 12px padding.
+   Vertical padding is now the dominant term so a row reads as one line. */
 table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 th { text-align: left; color: var(--subtle); font-weight: 600; font-size: var(--fs-xs);
-     padding: var(--s2) var(--s3); border-bottom: 1px solid var(--line); white-space: nowrap; }
-td { padding: var(--s3); border-bottom: 1px solid var(--line); vertical-align: middle; }
-tr:last-child td { border-bottom: 0; }
-.table-scroll { overflow-x: auto; }
+     letter-spacing: .04em; padding: var(--s3) var(--s4);
+     border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: var(--s4); border-bottom: 1px solid var(--line);
+     vertical-align: middle; line-height: 1.6; }
+th:first-child, td:first-child { padding-left: var(--s2); }
+th:last-child, td:last-child { padding-right: var(--s2); }
+tbody tr:last-child td { border-bottom: 0; }
+.table-scroll { overflow-x: auto; margin: 0 calc(var(--s2) * -1); padding: 0 var(--s2); }
 
-.badge { display: inline-flex; align-items: center; gap: var(--s1); padding: 2px var(--s2);
-         border-radius: var(--pill); font-size: var(--fs-xs); background: var(--surface-raised);
+.badge { display: inline-flex; align-items: center; gap: var(--s1);
+         padding: var(--s1) var(--s3); border-radius: var(--pill);
+         font-size: var(--fs-xs); line-height: 1.6; background: var(--surface-raised);
          color: var(--muted); white-space: nowrap; }
 .badge.ready { background: color-mix(in srgb, var(--green) 14%, var(--surface)); color: var(--green); }
 .badge.missing { background: color-mix(in srgb, var(--red) 14%, var(--surface)); color: var(--red); }
 .badge.partial { background: color-mix(in srgb, var(--amber) 16%, var(--surface)); color: var(--amber); }
-.hint { color: var(--amber); font-size: var(--fs-xs); }
+.hint { color: var(--amber); font-size: var(--fs-xs); margin-left: var(--s1); }
 
-.detail td { background: var(--surface-raised); }
-.account-form { display: grid; gap: var(--s3); max-width: 34rem; }
-.form-footer { display: flex; gap: var(--s3); align-items: center; flex-wrap: wrap; }
+/* The expanded editor is a form inside a table row, so it needs its own
+   padding rather than inheriting a cell's. */
+.detail td { background: var(--surface-raised); padding: var(--s6) var(--s4); }
+.account-form { display: grid; gap: var(--s5); max-width: 36rem; }
+.form-footer { display: flex; gap: var(--s3); align-items: center; flex-wrap: wrap;
+               padding-top: var(--s1); }
 .row-actions { display: flex; gap: var(--s2); justify-content: flex-end; }
-.result { font-size: var(--fs-sm); }
+.result { font-size: var(--fs-sm); line-height: 1.75; }
+
+@media (max-width: 40rem) {
+  .topbar { padding: var(--s4) var(--s5); }
+  main { padding: var(--s5); gap: var(--s6); }
+  .panel { padding: var(--s5); }
+  .login-card { padding: var(--s6); }
+}

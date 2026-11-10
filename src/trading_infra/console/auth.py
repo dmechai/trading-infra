@@ -23,7 +23,7 @@ SESSION_TTL_SECONDS = 12 * 60 * 60
 # PBKDF2 rather than a bare digest: the file is 0600, but a stolen copy should
 # still not yield the password to a wordlist in minutes.
 ITERATIONS = 240_000
-MIN_PASSWORD_LENGTH = 12
+MIN_PASSWORD_LENGTH = 8
 
 
 class AuthError(Exception):

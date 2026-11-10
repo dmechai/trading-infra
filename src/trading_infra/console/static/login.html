@@ -25,7 +25,7 @@ fetch('/api/bootstrap', {credentials: 'same-origin'})
     firstRun = !data.configured;
     if (firstRun) {
       document.getElementById('intro').textContent =
-        '首次启用：这里填写的账号和密码将成为凭证台的登录凭据，密码至少 12 位。';
+        '首次启用：这里填写的账号和密码将成为凭证台的登录凭据，密码至少 8 位。';
       form.querySelector('button').textContent = '设置并登录';
     } else if (data.user) {
       form.querySelector('[name=user]').value = data.user;

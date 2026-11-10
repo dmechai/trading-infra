@@ -118,7 +118,7 @@ function operatorPanel() {
     <div class="panel-head"><h2>凭证台登录</h2><span class="spacer"></span>${badge('', data.user || '未配置')}</div>
     <form id="operator-form" class="account-form">
       <label class="field">操作员账号<input name="user" value="${esc(data.user || '')}" autocomplete="username" required></label>
-      <label class="field">新密码<input name="password" type="password" autocomplete="new-password" placeholder="至少 12 位" required></label>
+      <label class="field">新密码<input name="password" type="password" autocomplete="new-password" placeholder="至少 8 位" required></label>
       <div class="form-footer"><button class="primary" type="submit">更新登录</button>
         <span class="result" id="operator-result"></span></div>
     </form>

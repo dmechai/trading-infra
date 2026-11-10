@@ -48,6 +48,12 @@ def test_short_password_refused(auth_file):
     assert auth.configured(auth_file) is False
 
 
+def test_eight_characters_is_accepted(auth_file):
+    auth.set_operator('dmechai', 'eightchr', path=auth_file)
+    assert auth.configured(auth_file) is True
+    assert auth.verify('dmechai', 'eightchr', path=auth_file) is True
+
+
 def test_file_is_written_0600(auth_file):
     auth.set_operator('dmechai', 'a-long-enough-password', path=auth_file)
     assert stat.S_IMODE(auth_file.stat().st_mode) == 0o600
