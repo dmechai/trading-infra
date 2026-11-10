@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071426"><title>凭证台 · 登录</title>
+<link rel="stylesheet" href="/styles.css"></head>
+<body><main class="login-shell"><section class="login-card">
+<h1>凭证台</h1>
+<p id="intro">交易所账户的唯一写入口。Grid 与 arb 只读同一份存储。</p>
+<form id="login-form">
+  <label>操作员账号<input name="user" autocomplete="username" required></label>
+  <label>密码<input name="password" type="password" autocomplete="current-password" required></label>
+  <button class="primary" type="submit">登录</button>
+  <div id="error" role="alert"></div>
+</form>
+<p class="subtle">这套账号与 Grid 的登录互不相干：Grid 的会话被窃取，也拿不到改写密钥库的权限。</p>
+</section></main>
+<script>
+const form = document.getElementById('login-form');
+const error = document.getElementById('error');
+let firstRun = false;
+
+fetch('/api/bootstrap', {credentials: 'same-origin'})
+  .then(r => r.json())
+  .then(data => {
+    firstRun = !data.configured;
+    if (firstRun) {
+      document.getElementById('intro').textContent =
+        '首次启用：这里填写的账号和密码将成为凭证台的登录凭据，密码至少 12 位。';
+      form.querySelector('button').textContent = '设置并登录';
+    } else if (data.user) {
+      form.querySelector('[name=user]').value = data.user;
+    }
+  })
+  .catch(() => {});
+
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = form.querySelector('button');
+  if (button.disabled) return;
+  error.textContent = '';
+  button.disabled = true;
+  const label = button.textContent;
+  button.textContent = '正在验证…';
+  try {
+    const response = await fetch('/api/login', {
+      method: 'POST', credentials: 'same-origin',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(Object.fromEntries(new FormData(form)))
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || '登录失败');
+    }
+    location.replace('/index.html');
+    return;
+  } catch (err) {
+    error.textContent = err.message;
+    button.disabled = false;
+    button.textContent = label;
+  }
+});
+</script></body></html>

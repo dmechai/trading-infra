@@ -1,0 +1,43 @@
+name: infra-console
+
+services:
+  console:
+    build:
+      context: .
+    image: infra-console:local
+    container_name: infra-console
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 15s
+    environment:
+      INFRA_CONSOLE_HOST: 0.0.0.0
+      INFRA_CONSOLE_PORT: "8772"
+    ports:
+      - "127.0.0.1:8772:8772"
+    volumes:
+      # The one writable mount of the credential store in the whole system.
+      # Grid and arb mount the same directory read-only; an account can only be
+      # created, changed or deleted here. The directory rather than the file,
+      # because an atomic replace swaps the inode.
+      - /etc/dmechai:/etc/dmechai:rw
+      # Console login, outside the store and outside the secrets group: a desk
+      # that can read every key still cannot read the password that rewrites them.
+      - /etc/dmechai-console:/etc/dmechai-console:rw
+    # Root, because the store is 0640 root:dmechai-secrets and an atomic
+    # replace has to create its temporary file in a root-owned directory.
+    user: "0:0"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
