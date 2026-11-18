@@ -49,6 +49,11 @@ class ArcusPublicClient(PublicJSONClient):
         return {
             "market": row["marketDisplayName"],
             "market_id": int(row["marketId"]),
+            "asset_class": ({"CRYPTO": "crypto", "EQUITIES": "equity",
+                             "COMMODITIES": "commodity", "INDICES": "index"}
+                            .get(row.get("category"))),
+            "underlying_name": row.get("fullAssetName"),
+            "quote_currency": row.get("quoteAsset"),
             **margins,
             "max_leverage": Decimal(1) / margins['initial_margin'] if margins['initial_margin'] is not None else None,
             "risk_source": "arcus_market_fractions",

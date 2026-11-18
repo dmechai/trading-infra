@@ -60,6 +60,7 @@ class BitgetPerpPublicClient(PublicJSONClient):
         nxt = number(ticker.get('nextFundingTime'), positive=True)
         timestamp = number(ticker.get('ts'), positive=True)
         return dict(market=market_name(row['baseCoin']), symbol=row['symbol'], market_id=row['symbol'],
+                    asset_class='crypto' if row.get('isRwa') == 'NO' else None,
                     quote_currency='USDT', settle_currency='USDT', contract_size=Decimal(1),
                     funding_rate=number(ticker.get('fundingRate')),
                     funding_interval_hours=hours if hours else Decimal(8),

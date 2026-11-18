@@ -2,6 +2,7 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from time import time
 from .adapters.arcus import ArcusPublicClient
+from .adapters.entropy_perp import EntropyPublicClient
 from .adapters.risex import RiseXPublicClient
 from .adapters.lighter import LighterPublicClient
 from .adapters.okx import OKXPublicClient
@@ -13,7 +14,8 @@ from .adapters.bitget_perp import BitgetPerpPublicClient
 PUBLIC_CLIENTS = {'risex': RiseXPublicClient, 'arcus': ArcusPublicClient,
                   'lighter': LighterPublicClient,
                   'okx': OKXPublicClient, 'hyperliquid': HyperliquidPublicClient,
-                  'binance': BinancePerpPublicClient, 'bitget': BitgetPerpPublicClient}
+                  'binance': BinancePerpPublicClient, 'bitget': BitgetPerpPublicClient,
+                  'entropy': EntropyPublicClient}
 
 
 def public_client(venue, network, **kwargs):

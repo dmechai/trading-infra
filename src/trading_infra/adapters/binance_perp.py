@@ -46,6 +46,7 @@ class BinancePerpPublicClient(PublicJSONClient):
         hours = number(row.get('fundingIntervalHours'), positive=True)
         nxt = number(premium.get('nextFundingTime'), positive=True)
         return dict(market=market_name(row['baseAsset']), symbol=row['symbol'], market_id=row['symbol'],
+                    asset_class='crypto' if row.get('underlyingType') == 'COIN' else None,
                     quote_currency='USDT', settle_currency='USDT', contract_size=Decimal(1),
                     funding_rate=number(premium.get('lastFundingRate')),
                     funding_interval_hours=hours if hours else Decimal(8),
