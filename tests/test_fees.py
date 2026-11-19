@@ -1,13 +1,9 @@
 """Fee resolution order, and the guard against a bad probe."""
 import json
 import stat
-import sys
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 
 from trading_infra import fees
 

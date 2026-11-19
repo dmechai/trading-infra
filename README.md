@@ -119,8 +119,8 @@ book = clients['okx'].get_order_book(btc, limit=20)
 测试独立于任何使用方项目，使用固定响应与模拟客户端，不需要凭据或交易所连接：
 
 ```bash
-python3 -m pip install -e '.[async]'
-python3 -m unittest discover -s tests -v
+python3 -m pip install '.[async,test]'
+python3 -m pytest --import-mode=importlib tests -v
 python3 -m pip wheel --no-deps --wheel-dir dist .
 ```
 

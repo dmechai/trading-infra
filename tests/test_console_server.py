@@ -1,16 +1,12 @@
 """The console's HTTP surface: nothing writable without a session."""
 import json
 import stat
-import sys
 import threading
 import urllib.error
 import urllib.request
 from http.cookiejar import CookieJar
-from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
 
 from trading_infra.console import auth as console_auth
 from trading_infra.console import server as console_server

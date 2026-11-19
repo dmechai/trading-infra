@@ -14,6 +14,10 @@ Issues = "https://github.com/dmechai/trading-infra/issues"
 
 [project.optional-dependencies]
 async = ["aiohttp>=3.9", "ccxt>=4"]
+test = ["pytest>=8,<10", "eth-keys>=0.5", "eth-hash[pycryptodome]>=0.5"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"trading_infra.console" = ["static/*.html", "static/*.css", "static/*.js"]

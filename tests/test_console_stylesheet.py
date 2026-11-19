@@ -5,12 +5,9 @@ accumulated there. This one starts with the same guard rather than waiting
 for the same drift.
 """
 import re
-import sys
-from pathlib import Path
+from importlib.resources import files
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
-
-STATIC = Path(__file__).resolve().parents[1] / 'src' / 'trading_infra' / 'console' / 'static'
+STATIC = files('trading_infra.console').joinpath('static')
 CSS = (STATIC / 'styles.css').read_text(encoding='utf-8')
 MARKUP = ''.join((STATIC / name).read_text(encoding='utf-8')
                  for name in ('index.html', 'login.html', 'app.js'))
